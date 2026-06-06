@@ -1,7 +1,37 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+// Updated local fallback mock to capture all authentication triggers seamlessly
+const db = globalThis.__B44_DB__ || { 
+  auth: new Proxy({
+    isAuthenticated: async () => false, 
+    me: async () => null 
+  }, {
+    get: (target, prop) => {
+      if (prop in target) return target[prop];
+      
+      // Catch any auth functions (loginViaEmailPassword, loginWithProvider, etc.)
+      return async (...args) => {
+        console.log(`[Base44 Local Bypass] Intercepted call to db.auth.${prop}`, args);
+        return { user: { id: "1", name: "Pankaj Kumar Roy" } };
+      };
+    }
+  }), 
+  entities: new Proxy({}, { 
+    get: () => ({ 
+      filter: async () => [], 
+      get: async () => null, 
+      create: async () => ({}), 
+      update: async () => ({}), 
+      delete: async () => ({}) 
+    }) 
+  }), 
+  integrations: { 
+    Core: { 
+      UploadFile: async () => ({ file_url: '' }) 
+    } 
+  } 
+};
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +40,12 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Hook for state-preserving redirects
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +53,14 @@ export default function Login() {
     setLoading(true);
     try {
       await db.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      
+      // Trigger local app state authentication mapping if provided
+      if (typeof onLoginSuccess === 'function') {
+        onLoginSuccess();
+      }
+      
+      // Route smoothly into the app workspace
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -32,6 +70,10 @@ export default function Login() {
 
   const handleGoogle = () => {
     db.auth.loginWithProvider("google", "/");
+    if (typeof onLoginSuccess === 'function') {
+      onLoginSuccess();
+    }
+    navigate("/dashboard");
   };
 
   return (

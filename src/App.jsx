@@ -1,11 +1,10 @@
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
+import { useState } from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { AuthProvider } from '@/lib/AuthContext';
 
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -24,49 +23,39 @@ import Analytics from '@/pages/Analytics';
 import Settings from '@/pages/Settings';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  // Use a local state variable to control landing status
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-display font-bold text-sm">SF</span>
-          </div>
-          <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
-  }
+  // A local function to trigger entry when credentials are submitted
+  const handleMockLoginSuccess = () => {
+    setUserAuthenticated(true);
+  };
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      {/* 1. If NOT authenticated, visiting "/" redirects instantly to "/login" */}
+      <Route 
+        path="/" 
+        element={userAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} 
+      />
+
+      {/* 2. Public Facing Guest Routes */}
+      <Route path="/login" element={<Login onLoginSuccess={handleMockLoginSuccess} />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/transactions/new" element={<NewTransaction />} />
-          <Route path="/budgets" element={<Budgets />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/calendar" element={<FinancialCalendar />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
+      {/* 3. Restricted Dashboard Routes Wrapper */}
+      <Route element={userAuthenticated ? <AppLayout /> : <Navigate to="/login" replace />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/transactions/new" element={<NewTransaction />} />
+        <Route path="/budgets" element={<Budgets />} />
+        <Route path="/goals" element={<Goals />} />
+        <Route path="/accounts" element={<Accounts />} />
+        <Route path="/calendar" element={<FinancialCalendar />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
@@ -84,7 +73,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

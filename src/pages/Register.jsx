@@ -1,7 +1,41 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+// Complete dynamic proxy fallback to safely mock registration, OTP steps, and logins
+const db = globalThis.__B44_DB__ || { 
+  auth: new Proxy({
+    isAuthenticated: async () => false, 
+    me: async () => null,
+    setToken: (token) => console.log("[Base44 Mock] Token saved:", token)
+  }, {
+    get: (target, prop) => {
+      if (prop in target) return target[prop];
+      
+      // Dynamic handler to trap verifyOtp, resendOtp, register, etc.
+      return async (...args) => {
+        console.log(`[Base44 Local Bypass] Intercepted call to db.auth.${prop}`, args);
+        if (prop === 'verifyOtp') {
+          return { access_token: "mock-local-jwt-token" };
+        }
+        return { user: { id: "1", name: "User" } };
+      };
+    }
+  }), 
+  entities: new Proxy({}, { 
+    get: () => ({ 
+      filter: async () => [], 
+      get: async () => null, 
+      create: async () => ({}), 
+      update: async () => ({}), 
+      delete: async () => ({}) 
+    }) 
+  }), 
+  integrations: { 
+    Core: { 
+      UploadFile: async () => ({ file_url: '' }) 
+    } 
+  } 
+};
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate for smooth local redirection
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +54,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const navigate = useNavigate(); // Hook instantiation
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +82,9 @@ export default function Register() {
       if (result?.access_token) {
         db.auth.setToken(result.access_token);
       }
-      window.location.href = "/";
+      
+      // Use clean SPA navigation instead of window.location.href to preserve states
+      navigate("/login"); 
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -70,6 +107,7 @@ export default function Register() {
 
   const handleGoogle = () => {
     db.auth.loginWithProvider("google", "/");
+    navigate("/login");
   };
 
   if (showOtp) {
