@@ -1,0 +1,95 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense",
+        "transfer"
+      ],
+      "description": "Transaction type"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Transaction amount"
+    },
+    "category": {
+      "type": "string",
+      "description": "Transaction category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Transaction subcategory"
+    },
+    "account_id": {
+      "type": "string",
+      "description": "Account ID"
+    },
+    "to_account_id": {
+      "type": "string",
+      "description": "Transfer destination account ID"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Transaction date"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "bank_transfer",
+        "mobile",
+        "check",
+        "online"
+      ],
+      "description": "Payment method"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Receipt image URL"
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "default": false
+    },
+    "recurring_id": {
+      "type": "string",
+      "description": "Linked recurring transaction ID"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Transaction tags"
+    }
+  },
+  "required": [
+    "type",
+    "amount",
+    "category",
+    "date"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

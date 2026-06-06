@@ -1,0 +1,62 @@
+{
+  "name": "Account",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Account name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "bank",
+        "credit_card",
+        "mobile_banking",
+        "savings",
+        "investment"
+      ],
+      "description": "Account type"
+    },
+    "balance": {
+      "type": "number",
+      "default": 0,
+      "description": "Current balance"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Currency code"
+    },
+    "color": {
+      "type": "string",
+      "description": "Display color hex"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon name"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

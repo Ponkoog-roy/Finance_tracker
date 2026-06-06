@@ -1,0 +1,68 @@
+{
+  "name": "SavingsGoal",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Goal name"
+    },
+    "target_amount": {
+      "type": "number",
+      "description": "Target amount"
+    },
+    "current_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Current saved amount"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Target date"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Goal icon"
+    },
+    "color": {
+      "type": "string",
+      "description": "Display color"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "paused"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "target_amount"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
